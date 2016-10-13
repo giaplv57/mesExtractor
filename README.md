@@ -9,3 +9,6 @@ A simple python script that extract all messages of a conversation from the copy
    <img src="https://raw.githubusercontent.com/giaplv57/miscAsserts/master/FbSetting.png" width="100%"/>
  2. Install the prerequisites
  3. Clone and run mesExtractor script
+ 
+## Demo
+[![asciicast](https://asciinema.org/a/89087.png)](https://asciinema.org/a/89087)
