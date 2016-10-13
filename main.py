@@ -5,6 +5,7 @@ import unicodedata
 import io
 import os.path
 import shutil
+monthList = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
 def greetingText():
     greeting = ''
@@ -33,6 +34,30 @@ def normalizeAccountName(s):
     s = re.sub(u'Đ', 'D', s)
     s = re.sub(u'đ', 'd', s)
     return unicodedata.normalize('NFKD', unicode(s)).encode('ASCII', 'ignore').lower()
+
+def timeParser(timeString):
+    #dayOfWeek, dateOfMonth, month, year, hour = timeParser(times[i].string)
+    #[u'Wednesday,', u'13', u'January', u'2016', u'at', u'14:38', u'UTC+07']
+    timeElements = timeString.split(' ')
+    for i in range(len(timeElements)):
+        # If the last character is ',' then remove it
+        if timeElements[i][-1:] == ",":
+            timeElements[i] = timeElements[i][0:-1]
+
+    for element in timeElements:
+        if element.find('day') != -1:
+            dayOfWeek = element
+        elif element.isdigit() and len(element) <= 2:
+            dateOfMonth = element
+        elif element.find(':') != -1:
+            hour = element
+        elif element.isdigit() and len(element) == 4:
+            year = element
+        elif element in monthList:
+            month = element
+        else:
+            continue
+    return dayOfWeek, dateOfMonth, month, year, hour
 
 def linePrepender(filename, line):
     """Write a lines to the beginning of a file
@@ -100,19 +125,21 @@ def writeMessageToFiles(allThread, resultFolderName):
     Then write to files in structure ./year/month/date(day_of_week).txt
     """
     print "Extracting all message in the conversation..."
+    numberOfMessage = 0
     for thread in allThread:
         # chatContent = []
         threadSoup = BeautifulSoup(thread, 'html.parser')
         users = threadSoup.find_all("span", class_="user")
         times = threadSoup.find_all("span", class_="meta")
         messages = threadSoup.find_all("p")
+        numberOfMessage += len(users)
         for i in range(len(users)):
-            time = times[i].string.split(' ')
-            dayOfWeek, dateOfMonth, month, year, hour = time[0][:-1], time[1], time[2], time[3], time[5]
+            dayOfWeek, dateOfMonth, month, year, hour = timeParser(times[i].string)
             fileToWrite = './' + resultFolderName + '/{0}/{1}/{2}({3}).txt'.format(year, month, dateOfMonth, dayOfWeek)
             message = messages[i].string if messages[i].string != None else '**sticker**'
             contentToWrite = users[i].string+ '---------------------' + hour + '\n' +  message
             linePrepender(fileToWrite, '\n' + contentToWrite)
+    print "Successfully retrieved {0} messages from the conversation".format(numberOfMessage)
 
 if __name__ == "__main__":
     print greetingText() + "\n"
